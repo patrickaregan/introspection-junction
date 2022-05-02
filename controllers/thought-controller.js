@@ -1,12 +1,32 @@
 const res = require('express/lib/response');
-const { Thought } = require('../models');
+const { Thought, User } = require('../models');
 
 const thoughtController = {
 
     // create thought
-    createThought({ body }, res) {
+    //createThought({ body }, res) {
+    //    Thought.create(body)
+    //        .then(dbData => res.json(dbData))
+    //        .catch(err => res.json(err));
+    //},
+
+    // create thought
+    createThought({ params, body }, res) {
         Thought.create(body)
-            .then(dbData => res.json(dbData))
+            .then(({ _id }) => {
+                return User.findOneAndUpdate(
+                    { _id: params.userId },
+                    { $push: { thoughts: _id } },
+                    { new: true }
+                )
+            })
+            .then(dbData => {
+                if (!dbData) {
+                    res.status(404).json({ message: 'No User found with this ID'});
+                    return;
+                }
+                res.json(dbData);
+            })
             .catch(err => res.json(err));
     },
 
